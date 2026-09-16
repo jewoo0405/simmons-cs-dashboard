@@ -1244,8 +1244,8 @@ function saveToStorage(){
   sbSave(STORAGE_FILES, fileRegistry).catch(()=>{});
 }
 
-async function loadFromStorage(){
-  // 1) localStorage 우선 읽기 (동기, 즉시 표시)
+function loadFromStorage(){
+  // localStorage에서 동기 로드 (빠름, 초기화 블로킹 없음)
   try{
     const d = localStorage.getItem(STORAGE_DATA);
     const f = localStorage.getItem(STORAGE_FILES);
@@ -1263,24 +1263,6 @@ async function loadFromStorage(){
     if(cg) catGroupMap = JSON.parse(cg);
   }catch(e){ catGroupMap = {}; }
 
-  // 2) Supabase에서 최신 데이터로 덮어쓰기 (비동기)
-  if(sbClient){
-    const el = document.getElementById('hd-status');
-    if(el) el.textContent = '☁️ 클라우드 동기화 중...';
-    const [d, f, pm, pf, cg] = await Promise.all([
-      sbLoad(STORAGE_DATA),
-      sbLoad(STORAGE_FILES),
-      sbLoad(STORAGE_PRODMAP),
-      sbLoad(STORAGE_PRODFILE),
-      sbLoad(STORAGE_CATGROUP),
-    ]);
-    if(d !== null){ rawData = d; try{ localStorage.setItem(STORAGE_DATA, JSON.stringify(d)); }catch(e){} }
-    if(f !== null){ fileRegistry = f; try{ localStorage.setItem(STORAGE_FILES, JSON.stringify(f)); }catch(e){} }
-    if(pm !== null){ productMap = pm; productLoaded = true; try{ localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(pm)); }catch(e){} }
-    if(pf !== null){ productFilename = pf; try{ localStorage.setItem(STORAGE_PRODFILE, pf); }catch(e){} }
-    if(cg !== null){ catGroupMap = cg; try{ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(cg)); }catch(e){} }
-  }
-
   // ── 마이그레이션: AS완료 레코드의 date/ym을 수리완료일 기준으로 교정 ──
   let migrated = false;
   rawData.forEach(r => {
@@ -1297,6 +1279,42 @@ async function loadFromStorage(){
   if(migrated) saveToStorage();
 
   updateProdHeader();
+}
+
+// Supabase 동기화 — 초기화 완료 후 백그라운드에서 실행
+async function syncFromSupabase(){
+  if(!sbClient) return;
+  const el = document.getElementById('hd-status');
+  if(el) el.textContent = '☁️ 클라우드 동기화 중...';
+  try{
+    const [d, f, pm, pf, cg] = await Promise.all([
+      sbLoad(STORAGE_DATA),
+      sbLoad(STORAGE_FILES),
+      sbLoad(STORAGE_PRODMAP),
+      sbLoad(STORAGE_PRODFILE),
+      sbLoad(STORAGE_CATGROUP),
+    ]);
+    let changed = false;
+    if(d !== null && JSON.stringify(d) !== JSON.stringify(rawData)){ rawData = d; try{ localStorage.setItem(STORAGE_DATA, JSON.stringify(d)); }catch(e){} changed = true; }
+    if(f !== null){ fileRegistry = f; try{ localStorage.setItem(STORAGE_FILES, JSON.stringify(f)); }catch(e){} }
+    if(pm !== null){ productMap = pm; productLoaded = true; try{ localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(pm)); }catch(e){} }
+    if(pf !== null){ productFilename = pf; try{ localStorage.setItem(STORAGE_PRODFILE, pf); }catch(e){} }
+    if(cg !== null){ catGroupMap = cg; try{ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(cg)); }catch(e){} }
+    // 클라우드 데이터로 업데이트된 경우 대시보드 재렌더
+    if(changed){
+      updateProdHeader();
+      updateHdStatus();
+      if(rawData.length){
+        document.getElementById('empty-state').style.display='none';
+        document.getElementById('dashboard').style.display='block';
+        initDashboard();
+      }
+    }
+    if(el && rawData.length) el.textContent = `☁️ 동기화 완료 · ${rawData.length.toLocaleString()}건`;
+    else if(el) el.textContent = '';
+  }catch(e){
+    if(el) el.textContent = '';
+  }
 }
 
 // ══════════════════════════════════════
@@ -4040,21 +4058,17 @@ function initMonthPickers(){
   });
 }
 
-window.addEventListener('DOMContentLoaded', async ()=>{
+window.addEventListener('DOMContentLoaded', ()=>{
   initMonthPickers();
-  await loadFromStorage();
+  loadFromStorage();       // 동기 — 즉시 완료
   updateHdStatus();
   if(rawData.length){
     showScreen('dash');
     initDashboard();
   } else {
-    showScreen('dash'); // empty state visible
+    showScreen('dash');   // empty state visible
   }
-  // Supabase 동기화 완료 후 헤더 상태 갱신
-  if(sbClient){
-    const el = document.getElementById('hd-status');
-    if(el && rawData.length) el.textContent = `☁️ 동기화 완료 · ${rawData.length.toLocaleString()}건`;
-  }
+  syncFromSupabase();     // 백그라운드 — 블로킹 없음
 });
 // ══════════════════════════════════════
 // PASSWORD PROTECTION
