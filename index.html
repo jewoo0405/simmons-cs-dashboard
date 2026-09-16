@@ -1751,9 +1751,10 @@ function _applyUpload(){
 
   const dupTotal=fileRegistry.reduce((s,f)=>s+(f.dupCount||0),0);
   if(addedTotal>0){
-    showToast(`✓ ${addedTotal.toLocaleString()}건 추가됨. 대시보드로 이동하세요.`);
-    // 미분류 제품 확인
+    showToast(`✓ ${addedTotal.toLocaleString()}건 추가됨`);
     updateCatReviewBadge();
+    // 대시보드로 자동 이동 (showScreen 내부에서 initDashboard 호출됨)
+    showScreen('dash');
     setTimeout(()=>{
       const unc=gatherUnclassifiedItems().filter(x=>!catGroupMap[x.model]);
       if(unc.length) showCatReviewModal();
@@ -4063,8 +4064,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   loadFromStorage();       // 동기 — 즉시 완료
   updateHdStatus();
   if(rawData.length){
-    showScreen('dash');
-    initDashboard();
+    showScreen('dash');   // 내부에서 initDashboard() 호출됨
   } else {
     showScreen('dash');   // empty state visible
   }
