@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --navy:#0B1437;--navy2:#162050;--gold:#C9A84C;--gold2:#E8C96D;
@@ -33,6 +34,23 @@ body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:var(--bg);co
 .btn-dl{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2)}.btn-dl:hover{background:rgba(255,255,255,.15)}
 .btn-excel{background:#16A34A;color:#fff;border:1px solid #15803D}.btn-excel:hover{background:#15803D}
 .btn-prod-loaded{background:rgba(16,185,129,.18);color:#6EE7B7;border:1px solid rgba(16,185,129,.35)}.btn-prod-loaded:hover{background:rgba(16,185,129,.28)}
+
+/* ── PASSWORD MODAL ── */
+#pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center}
+#pw-overlay.open{display:flex}
+#pw-box{background:#fff;border-radius:var(--r);padding:28px 32px;width:320px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#pw-box h3{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:6px}
+#pw-desc{font-size:12px;color:var(--g500);margin-bottom:16px}
+#pw-input{width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:var(--r3);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box}
+#pw-input:focus{border-color:var(--gold)}
+#pw-input.pw-error{border-color:#DC2626;animation:pwShake .25s}
+#pw-err{font-size:11px;color:#DC2626;min-height:16px;margin-bottom:12px}
+@keyframes pwShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pw-btns{display:flex;gap:8px;justify-content:flex-end}
+.pw-btn-ok{padding:8px 20px;background:var(--navy);color:#fff;border:none;border-radius:var(--r3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.pw-btn-ok:hover{background:var(--navy2)}
+.pw-btn-cancel{padding:8px 16px;background:var(--g100);color:var(--g700);border:1px solid var(--g200);border-radius:var(--r3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.pw-btn-cancel:hover{background:var(--g200)}
 
 /* ── PRODUCT PANEL ── */
 #prod-panel{display:none;position:fixed;top:62px;right:160px;z-index:400;background:#fff;border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.22);width:460px;max-height:500px;flex-direction:column;border:1px solid var(--g200)}
@@ -1158,6 +1176,36 @@ const TYPE_NAMES = {consult:'상담접수', as:'AS 접수', done:'AS 완료'};
 const palette = ['#3B82F6','#F59E0B','#10B981','#7C3AED','#DC2626','#06B6D4','#EC4899','#84CC16','#F97316'];
 
 // ══════════════════════════════════════
+// SUPABASE 설정
+// ══════════════════════════════════════
+// ▼ 아래 두 값을 Supabase 프로젝트의 값으로 교체하세요 ▼
+const SUPABASE_URL      = 'https://zdxzoeronrvwwuhhmiwt.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_KLqnJuwTVeWi5twEnfMFkQ_MxmKQuHm';
+// ▲──────────────────────────────────────────────────────▲
+
+const sbClient = (SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+async function sbSave(key, value){
+  if(!sbClient) return;
+  try{
+    await sbClient.from('cs_storage').upsert({key, value, updated_at: new Date().toISOString()});
+  }catch(e){}
+}
+async function sbLoad(key){
+  if(!sbClient) return null;
+  try{
+    const {data,error}=await sbClient.from('cs_storage').select('value').eq('key',key).maybeSingle();
+    return (error||!data) ? null : data.value;
+  }catch(e){ return null; }
+}
+async function sbDelete(key){
+  if(!sbClient) return;
+  try{ await sbClient.from('cs_storage').delete().eq('key',key); }catch(e){}
+}
+
+// ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
 let activeDataView = 'all'; // 'all' | 'consult' | 'as' | 'done'
@@ -1190,17 +1238,18 @@ function saveToStorage(){
       showToast('⚠️ 저장 공간 부족. 오래된 파일을 삭제해주세요.');
     }
   }
+  sbSave(STORAGE_DATA, rawData).catch(()=>{});
+  sbSave(STORAGE_FILES, fileRegistry).catch(()=>{});
 }
 
-function loadFromStorage(){
+async function loadFromStorage(){
+  // 1) localStorage 우선 읽기 (동기, 즉시 표시)
   try{
     const d = localStorage.getItem(STORAGE_DATA);
     const f = localStorage.getItem(STORAGE_FILES);
     if(d) rawData = JSON.parse(d);
     if(f) fileRegistry = JSON.parse(f);
-  }catch(e){
-    rawData = []; fileRegistry = [];
-  }
+  }catch(e){ rawData = []; fileRegistry = []; }
   try{
     const pm = localStorage.getItem(STORAGE_PRODMAP);
     const pf = localStorage.getItem(STORAGE_PRODFILE);
@@ -1212,11 +1261,29 @@ function loadFromStorage(){
     if(cg) catGroupMap = JSON.parse(cg);
   }catch(e){ catGroupMap = {}; }
 
+  // 2) Supabase에서 최신 데이터로 덮어쓰기 (비동기)
+  if(sbClient){
+    const el = document.getElementById('hd-status');
+    if(el) el.textContent = '☁️ 클라우드 동기화 중...';
+    const [d, f, pm, pf, cg] = await Promise.all([
+      sbLoad(STORAGE_DATA),
+      sbLoad(STORAGE_FILES),
+      sbLoad(STORAGE_PRODMAP),
+      sbLoad(STORAGE_PRODFILE),
+      sbLoad(STORAGE_CATGROUP),
+    ]);
+    if(d !== null){ rawData = d; try{ localStorage.setItem(STORAGE_DATA, JSON.stringify(d)); }catch(e){} }
+    if(f !== null){ fileRegistry = f; try{ localStorage.setItem(STORAGE_FILES, JSON.stringify(f)); }catch(e){} }
+    if(pm !== null){ productMap = pm; productLoaded = true; try{ localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(pm)); }catch(e){} }
+    if(pf !== null){ productFilename = pf; try{ localStorage.setItem(STORAGE_PRODFILE, pf); }catch(e){} }
+    if(cg !== null){ catGroupMap = cg; try{ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(cg)); }catch(e){} }
+  }
+
   // ── 마이그레이션: AS완료 레코드의 date/ym을 수리완료일 기준으로 교정 ──
   let migrated = false;
   rawData.forEach(r => {
     if(r.status === 'done' && r.doneDate) {
-      if(!r.intakeDate) { r.intakeDate = r.date; migrated = true; } // 접수일자 보존 (리드타임용) — 동월 케이스도 저장 플래그
+      if(!r.intakeDate) { r.intakeDate = r.date; migrated = true; }
       const newYm = r.doneDate.slice(0, 7);
       if(r.ym !== newYm) {
         r.date = r.doneDate;
@@ -1225,7 +1292,7 @@ function loadFromStorage(){
       }
     }
   });
-  if(migrated) saveToStorage(); // 교정된 데이터 바로 저장
+  if(migrated) saveToStorage();
 
   updateProdHeader();
 }
@@ -1293,6 +1360,7 @@ function normalizeModel(raw){
 function loadProductFile(input){
   const file=input.files[0]; if(!file) return;
   input.value='';
+  requirePassword('제품명 매핑 파일을 로드하려면 비밀번호를 입력하세요.', ()=>{
   const reader=new FileReader();
   reader.onload=e=>{
     try{
@@ -1314,6 +1382,8 @@ function loadProductFile(input){
         localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(productMap));
         localStorage.setItem(STORAGE_PRODFILE, productFilename);
       }catch(e){}
+      sbSave(STORAGE_PRODMAP, productMap).catch(()=>{});
+      sbSave(STORAGE_PRODFILE, productFilename).catch(()=>{});
       // 기존 데이터 갱신
       rawData.forEach(r=>{ r.modelDisplay=normalizeModel(r.model); });
       saveToStorage();
@@ -1325,6 +1395,7 @@ function loadProductFile(input){
     }catch(err){alert('파일 오류: '+err.message);}
   };
   reader.readAsArrayBuffer(file);
+  }); // requirePassword 끝
 }
 
 // ── 제품명 패널 함수들 ──
@@ -1383,16 +1454,20 @@ function filterProdTable(q){
 
 function resetProdMap(){
   const cnt=Object.keys(productMap).length;
-  if(!confirm(`제품명 매핑 ${cnt}개를 삭제하시겠습니까?\n삭제 후 모델명이 원본 전체명으로 표시됩니다.`)) return;
-  productMap={}; productLoaded=false; productFilename='';
-  localStorage.removeItem(STORAGE_PRODMAP);
-  localStorage.removeItem(STORAGE_PRODFILE);
-  rawData.forEach(r=>{ r.modelDisplay=normalizeModel(r.model); });
-  saveToStorage();
-  updateProdHeader();
-  closeProdPanel();
-  if(rawData.length) applyFilters();
-  showToast('제품명 매핑 삭제 완료');
+  requirePassword('제품명 매핑을 삭제하려면 비밀번호를 입력하세요.', ()=>{
+    if(!confirm(`제품명 매핑 ${cnt}개를 삭제하시겠습니까?\n삭제 후 모델명이 원본 전체명으로 표시됩니다.`)) return;
+    productMap={}; productLoaded=false; productFilename='';
+    localStorage.removeItem(STORAGE_PRODMAP);
+    localStorage.removeItem(STORAGE_PRODFILE);
+    sbDelete(STORAGE_PRODMAP).catch(()=>{});
+    sbDelete(STORAGE_PRODFILE).catch(()=>{});
+    rawData.forEach(r=>{ r.modelDisplay=normalizeModel(r.model); });
+    saveToStorage();
+    updateProdHeader();
+    closeProdPanel();
+    if(rawData.length) applyFilters();
+    showToast('제품명 매핑 삭제 완료');
+  });
 }
 
 // ══════════════════════════════════════
@@ -1588,6 +1663,9 @@ function setUzMsg(msg,type){
 // APPLY UPLOAD — 누적 저장
 // ══════════════════════════════════════
 function applyUpload(){
+  requirePassword('파일을 추가하려면 비밀번호를 입력하세요.', _applyUpload);
+}
+function _applyUpload(){
   const now=new Date();
   const timeStr=`${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
@@ -1696,13 +1774,15 @@ function renderFileList(){
 function deleteFile(fileId){
   const f=fileRegistry.find(x=>x.id===fileId);
   if(!f) return;
-  if(!confirm(`"${f.filename}" (${f.recordCount.toLocaleString()}건)을 삭제하시겠습니까?`)) return;
-  rawData=rawData.filter(r=>r.fileId!==fileId);
-  fileRegistry=fileRegistry.filter(x=>x.id!==fileId);
-  saveToStorage();
-  renderFileList();
-  updateHdStatus();
-  showToast(`✓ "${f.filename}" 삭제 완료`);
+  requirePassword(`"${f.filename}" 파일을 삭제하려면 비밀번호를 입력하세요.`, ()=>{
+    if(!confirm(`"${f.filename}" (${f.recordCount.toLocaleString()}건)을 삭제하시겠습니까?`)) return;
+    rawData=rawData.filter(r=>r.fileId!==fileId);
+    fileRegistry=fileRegistry.filter(x=>x.id!==fileId);
+    saveToStorage();
+    renderFileList();
+    updateHdStatus();
+    showToast(`✓ "${f.filename}" 삭제 완료`);
+  });
 }
 
 // ══════════════════════════════════════
@@ -1769,15 +1849,19 @@ function clearFilters(){
 }
 
 function resetAll(){
-  if(!confirm('모든 데이터와 파일 목록을 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
-  rawData=[]; fileRegistry=[]; filteredData=[]; searchData=null;
-  localStorage.removeItem(STORAGE_DATA); localStorage.removeItem(STORAGE_FILES);
-  Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
-  activeTab='ops'; switchTab('ops');
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('empty-state').style.display='block';
-  updateHdStatus();
-  showToast('초기화 완료');
+  requirePassword('전체 초기화하려면 비밀번호를 입력하세요.', ()=>{
+    if(!confirm('모든 데이터와 파일 목록을 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+    rawData=[]; fileRegistry=[]; filteredData=[]; searchData=null;
+    localStorage.removeItem(STORAGE_DATA); localStorage.removeItem(STORAGE_FILES);
+    sbDelete(STORAGE_DATA).catch(()=>{});
+    sbDelete(STORAGE_FILES).catch(()=>{});
+    Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
+    activeTab='ops'; switchTab('ops');
+    document.getElementById('dashboard').style.display='none';
+    document.getElementById('empty-state').style.display='block';
+    updateHdStatus();
+    showToast('초기화 완료');
+  });
 }
 
 // ══════════════════════════════════════
@@ -2118,7 +2202,10 @@ function renderT5(elId,map,color){
 // ══════════════════════════════════════
 // 미분류 제품군 확인
 // ══════════════════════════════════════
-function saveCatGroupMapStore(){ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(catGroupMap)); }
+function saveCatGroupMapStore(){
+  localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(catGroupMap));
+  sbSave(STORAGE_CATGROUP, catGroupMap).catch(()=>{});
+}
 
 function inferGroupForModel(modelName){
   const counts={};
@@ -3951,9 +4038,9 @@ function initMonthPickers(){
   });
 }
 
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded', async ()=>{
   initMonthPickers();
-  loadFromStorage();
+  await loadFromStorage();
   updateHdStatus();
   if(rawData.length){
     showScreen('dash');
@@ -3961,7 +4048,64 @@ window.addEventListener('DOMContentLoaded',()=>{
   } else {
     showScreen('dash'); // empty state visible
   }
+  // Supabase 동기화 완료 후 헤더 상태 갱신
+  if(sbClient){
+    const el = document.getElementById('hd-status');
+    if(el && rawData.length) el.textContent = `☁️ 동기화 완료 · ${rawData.length.toLocaleString()}건`;
+  }
+});
+// ══════════════════════════════════════
+// PASSWORD PROTECTION
+// ══════════════════════════════════════
+const DASHBOARD_PW = 'simmons2026'; // ← 비밀번호 변경 시 여기만 수정
+let _pwCallback = null;
+
+function requirePassword(desc, callback){
+  _pwCallback = callback;
+  document.getElementById('pw-desc').textContent = desc;
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').textContent = '';
+  document.getElementById('pw-input').classList.remove('pw-error');
+  document.getElementById('pw-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pw-input').focus(), 60);
+}
+function submitPw(){
+  const val = document.getElementById('pw-input').value;
+  if(val === DASHBOARD_PW){
+    closePwModal();
+    if(_pwCallback) _pwCallback();
+  } else {
+    const inp = document.getElementById('pw-input');
+    inp.classList.add('pw-error');
+    document.getElementById('pw-err').textContent = '비밀번호가 올바르지 않습니다.';
+    inp.value = '';
+    setTimeout(()=>inp.classList.remove('pw-error'), 300);
+  }
+}
+function closePwModal(){
+  document.getElementById('pw-overlay').classList.remove('open');
+  _pwCallback = null;
+}
+document.addEventListener('keydown', e=>{
+  if(!document.getElementById('pw-overlay').classList.contains('open')) return;
+  if(e.key==='Enter') submitPw();
+  if(e.key==='Escape') closePwModal();
 });
 </script>
+
+<!-- 비밀번호 모달 -->
+<div id="pw-overlay">
+  <div id="pw-box">
+    <h3>🔒 관리자 인증</h3>
+    <p id="pw-desc"></p>
+    <input type="password" id="pw-input" placeholder="비밀번호 입력" autocomplete="off">
+    <div id="pw-err"></div>
+    <div class="pw-btns">
+      <button class="pw-btn-cancel" onclick="closePwModal()">취소</button>
+      <button class="pw-btn-ok" onclick="submitPw()">확인</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
