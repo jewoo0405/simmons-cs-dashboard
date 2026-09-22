@@ -717,8 +717,15 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
         </div>
         <!-- 재접수 Top3 모델 증상 분석 -->
         <div class="sec" style="margin-top:16px;margin-bottom:0">
-          <div class="sec-hd"><div class="sec-icon">🔬</div><div class="sec-title">재접수 Top3 모델 증상 분석</div><div class="sec-note">해당 모델 재접수 고객의 상담접수 이력 기준</div></div>
-          <div id="top3-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+          <div class="sec-hd"><div class="sec-icon">🔬</div><div class="sec-title">재접수 Top3 모델 증상 분석</div><div class="sec-note">해당 모델 재접수 고객의 상담접수 이력 기준 · 카테고리별 Top3</div></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #DBEAFE;margin-bottom:10px">🛏 매트리스</div>
+          <div id="top3-mat-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #EDE9FE;margin-bottom:10px">🪵 프레임</div>
+          <div id="top3-frame-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #D1FAE5;margin-bottom:10px">🧺 침구</div>
+          <div id="top3-bed-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #FEF3C7;margin-bottom:10px">🪑 퍼니처</div>
+          <div id="top3-furn-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
         </div>
       </div><!-- /tab-quality -->
 
@@ -920,7 +927,7 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
             <div class="kpi-mini" style="border-top-color:#DC2626">
               <div class="kpi-mini-lbl">재접수 고객 수</div>
               <div class="kpi-mini-val" id="repeat-kpi1">-</div>
-              <div class="kpi-mini-sub" id="repeat-sub1">2회 이상 접수 고객</div>
+              <div class="kpi-mini-sub" id="repeat-sub1">1회 이상 재접수 고객</div>
             </div>
             <div class="kpi-mini" style="border-top-color:#F59E0B">
               <div class="kpi-mini-lbl">재접수율</div>
@@ -1104,7 +1111,7 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
   </div>
   <div class="pp-body">
     <table class="pp-table">
-      <thead><tr><th>원본 모델명</th><th>요약명</th></tr></thead>
+      <thead><tr><th>원본 모델명</th><th>요약명</th><th style="width:72px;text-align:center">제품유형</th></tr></thead>
       <tbody id="pp-tbody"></tbody>
     </table>
   </div>
@@ -1172,6 +1179,8 @@ const FRAME_SYM   = ['머리판','전동침대','베이스','베이스&머리판
 const BEDDING_SYM = ['이불','베개','사은품','토퍼백'];
 const FURNITURE_SYM = ['협탁','화장대','테이블','사이드가드','서랍장','쇼파','의자','스툴'];
 const UNCLASSIFIED_SYM = ['반품방어','AS방어','AS 방어','구매문의','기타','프래그런스','반품'];
+// ── 제품명 정리.xlsx 기반 제품군 매핑 (모델명/모델 단축명 → 카테고리) ──
+const EXCEL_CAT_MAP = {"N32 Spring Mattress Soft _SS":"매트리스","M(Raven) P-Class B KK":"매트리스","20FW RASID 콜드그레이 SS":"프레임","M(William) G-Class A QE":"매트리스","LEUTE":"프레임","Bernard":"매트리스","SMS 프란시스":"침구","M(Marion) P-Class B LK":"매트리스","26SS FLATO 라이트카키 GK":"프레임","21SS BRUBECK(소파4인) 오렌지":"퍼니처","M(Edison) G-Class A SS":"매트리스","101번 협탁":"퍼니처","M(Fusion) G-Class B LK":"매트리스","24FW TRIC 브라운 GK":"프레임","N32 TOPPER REGULAR A SS":"매트리스","M(Eggar) G-Class A SS":"매트리스","M(Bernard) P-Class B SS":"매트리스","M(Eggar) G-Class A GK":"매트리스","N32 Zzoggomi Mattress M (830*650*110)":"매트리스","SMS 올시즌 구스":"침구","17SS ROWL  도브화이트 QE":"프레임","M(William) G-Class A KK":"매트리스","M(Citrus) G-Class A KK":"매트리스","24SS VAIA A 매트웜그레이 QE":"프레임","25FW N32 모션베드_A (라이트그레이) LK/베이스":"프레임","23SS KNH블랙포레스트 구스 듀얼 서포트 토퍼 SS ※단종예정":"침구","26SS OLO CLASSIC A 내추럴 QE":"프레임","M(Helen) W-Class A LK":"매트리스","26SS SMS 프란시스 마엘리 NA QE":"침구","21FW KNH퀸즈밀러 프리미엄 구스듀벳 QE":"침구","M(William) G-Class A GK":"매트리스","M(Kelly) W-Class A LK":"매트리스","SMS구스 토퍼 페이즐리":"침구","16SS KNH구스레어 라이트 KK":"침구","25SS SMS퀸즈밀러 프리미엄 구스듀벳 KK":"침구","M(Eleanor) W-Class A GK":"매트리스","TEPI":"프레임","M(Sweet) P-Class A SS":"매트리스","25SS SMS매트리스 쿨링 패드 WH GK":"침구","25SS SMS매트리스 솔리드 커버 A IV GK":"침구","17SS ROWL  도브화이트 GK":"프레임","25SS SMS 프란시스 스카일라 NA GK/KK":"침구","SMS프란시스":"침구","25FW N32 모션베드_A (라이트그레이) KK":"프레임","25SS SMS매트리스 솔리드 커버 A IV LK":"침구","D2178":"프레임","FARNET":"퍼니처","M(Tangerine) W-Class A SS":"매트리스","25SS SMS리본패드 IV QE":"침구","21FW KNH퀸즈밀러 프리미엄 구스듀벳 GK":"침구","25SS LAVIE A 샌드그레이 SS":"프레임","SMS 솔리드 커버":"침구","26SS LEVELLE A 스모크월넛 KK":"프레임","24FW TRIC 브라운 SS":"프레임","25SS SMS구스 토퍼 워터프루프 슬리브 WH SS":"침구","N32 TOPPER REGULAR A KK":"매트리스","17SS ROWL  도브화이트 SS":"프레임","22FW N32 토퍼 ST 슬리브 NV QE":"침구","26SS SMS 100수 리본패드 WH GK":"침구","SMS 시즌브리즈":"침구","Brigitte":"매트리스","M(Marion) P-Class B QE":"매트리스","SMS 올 시즌 쿨링":"침구","M(Brigitte) G-Class A QE":"매트리스","M(Kelly) W-Class A GK":"매트리스","16SS KNH구스레어 라이트 QE":"침구","24SS ROPI Ⅱ  더스티핑크 LK":"프레임","20FW CALIXⅡ  콜드그레이 GK":"프레임","M(Giselle) G-Class A SS":"매트리스","M(Bernard) P-Class B LK":"매트리스","24SS ROPI Ⅱ  더스티핑크 KK":"프레임","N32 REGULAR TOPPER Seacell_KK":"매트리스","20FW CALIXⅡ  콜드그레이 KK":"프레임","21FW D2178 A 베이지 SS":"프레임","24FW TRIC 브라운 KK":"프레임","N32 Regular Topper 방수슬리브 LK":"침구","23FW FIBER POCKET SPRING (베개)":"침구","25SS N32매트리스 솔리드 커버 A IV LK":"침구","24SS ROPI Ⅱ  더스티핑크 GK":"프레임","LEVELLE":"프레임","M(William) G-Class A LK":"매트리스","25SS SMS블랙포레스트 구스 듀벳 프로텍티브 라이트 SS":"침구","24FW TRIC 브라운 QE":"프레임","24SS ROPI Ⅱ  더스티핑크 SS":"프레임","20FW KNH프릴패드 BE LK ※단종예정":"침구","Jasmine":"매트리스","25SS SMS방수매트커버 WH GK":"침구","21FW KNH퀸즈밀러 프리미엄 구스듀벳 KK":"침구","M(Vive) G-Class A LK":"매트리스","26SS OLO CLASSIC A 내추럴 LK":"프레임","M(Eggar) G-Class A QE":"매트리스","25SS SMS퀸즈밀러 프리미엄 구스듀벳 GK":"침구","26SS LEVELLE A 스모크월넛 LK":"프레임","17SS ROWL  도브화이트 LK":"프레임","발통[200mm":"프레임","25SS SMS매트리스 쿨링 패드 WH QE":"침구","M(Tangerine) W-Class A KK":"매트리스","Loren":"매트리스","SMS화이트컬렉션":"침구","TOTTEN":"퍼니처","21SS RASID 베이지 QE":"프레임","25SS SMS패드 IV QE":"침구","24FW TRIC 브라운 LK":"프레임","21FW KNH퀸즈밀러 프리미엄 구스듀벳 LK":"침구","M(Bernard) P-Class B QE":"매트리스","Hub":"매트리스","M(Marion) P-Class B SS":"매트리스","M(Lucile) W-Class A KK":"매트리스","25SS SMS구스 토퍼 워터프루프 슬리브 WH KK":"침구","SMS방수커버":"침구","24FW 101번 스마트 협탁 베이지":"퍼니처","M(Loren) P-Class A GK":"매트리스","SMS 쿨링 스프레드":"침구","26SS FLATO 라이트카키 LK":"프레임","N32 토퍼 방수 슬리브":"침구","26SS SMS 베네딕트 오네르 WH KK":"침구","25SS TAN 내추럴오크 SS":"프레임","25SS SMS방수매트커버 WH KK":"침구","M(Lucile) W-Class A SS":"매트리스","25SS 쿨링 구스 듀벳 QE":"침구","M(Brigitte) G-Class A GK":"매트리스","16SS KNH구스레어 라이트 GK":"침구","M(Sweet) P-Class A GK":"매트리스","M(Jasmine) G-Class A KK":"매트리스","M(Tangerine) W-Class A GK":"매트리스","Eleanor":"매트리스","25SS SMS블랙포레스트 구스 듀얼 서포트 토퍼 QE":"침구","26SS SMS 베네딕트 오네르 WH QE":"침구","25SS SMS블랙포레스트 구스 듀얼 서포트 토퍼 KK":"침구","발통[200mm]":"프레임","N32 HARD Seacell (B) GK":"매트리스","25SS SMS퀸즈밀러 프리미엄 구스듀벳 QE":"침구","N32 Zzoggomi Mattress S (630*490*110)":"매트리스","25SS SMS 화이트컬렉션 로니 WH LK":"침구","N32 TOPPER REGULAR A GK":"매트리스","26SS SMS 100수 리본패드 WH QE":"침구","SMS매트리스":"침구","M(Citrus) G-Class A LK":"매트리스","N32솔리드 커버":"침구","24SS VAIA A 매트웜그레이 KK":"프레임","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 GK":"침구","24SS KNH프란시스 플래드 PK QE":"침구","25SS SMS패드 IV GK":"침구","M(Hub) P-Class A QE":"매트리스","M(Hub) P-Class A LK":"매트리스","M(Edison) G-Class A KK":"매트리스","24SS KNH프란시스 플래드 PK SS":"침구","24SS ROPI Ⅱ  아이보리 SS":"프레임","25SS SMS방수매트커버 WH QE":"침구","23FW N32 토퍼백 NA GK":"침구","26SS SMS 100수 리본패드 WH KK":"침구","N32 Spring Mattress":"매트리스","25SS SMS프란시스 아트니 CH LK":"침구","16FW D2178 A 라이트오크 QE":"프레임","Kelly":"매트리스","M(Raven) P-Class B GK":"매트리스","M(Vive) G-Class A GK":"매트리스","25SS SMS올시즌 구스 듀벳 QE":"침구","N32 토퍼백":"침구","25SS SMS프란시스 아트니 CH QE※단종":"침구","25SS SMS블랙포레스트 구스 듀얼 서포트 토퍼 LK":"침구","M(Henry) P-Class B SS":"매트리스","N32 HARD Seacell (B) KK":"매트리스","25SS SMS리본패드 IV LK":"침구","20FW CALIXⅡ  콜드그레이 QE":"프레임","24SS KNH프란시스 플래드 PK KK":"침구","25SS SMS패드 IV LK":"침구","25SS SMS화이트컬렉션 루밀라 WH LK":"침구","26SS SMS 프란시스 마엘리 NA SS":"침구","N32 REGULAR TOPPER Seacell_QE":"매트리스","24SS LILLIAN  라이트그레이 LK":"프레임","25FW N32 모션베드_A (라이트그레이) SS":"프레임","21FW D2178 A 모카그레이 QE":"프레임","21FW D2178 A 베이지 KK":"프레임","25SS BR Centennial ED 뉴트럴그레이 LK":"프레임","Eggar":"매트리스","M(Jasmine) G-Class A SS":"매트리스","N32 모션베드":"프레임","25SS SMS패드 IV KK":"침구","25SS N32매트리스 솔리드 커버 A IV SS":"침구","M(Raven) P-Class B SS":"매트리스","SF(S-Type) LK (1/2)":"프레임","24FW 101번 스마트 협탁 라이트오크":"퍼니처","25SS SMS구스 토퍼 페이즐리 슬리브 WH KK":"침구","23SS VISCOSPRING_SOFT(베개)":"침구","25SS LAVIE A 샌드그레이 KK":"프레임","25SS SMS구스 토퍼 페이즐리 슬리브 WH SS":"침구","25SS SMS올시즌 구스 듀벳 LK":"침구","SMS 쿨링 패드":"침구","LILLIAN":"프레임","26SS OLO CLASSIC A 내추럴 KK":"프레임","26SS SMS 프란시스 마엘리 NA GK":"침구","25SS SMS리본패드 IV SS":"침구","M(Eleanor) W-Class A LK":"매트리스","SMS쿨링 패드":"침구","25SS SMS매트리스 쿨링 패드 WH SS":"침구","26SS LEVELLE A 스모크월넛 QE":"프레임","M(Jasmine) G-Class A QE":"매트리스","M(Henry) P-Class B QE":"매트리스","24FW 101번 스마트 협탁 모카그레이":"퍼니처","22FW N32 토퍼 방수 슬리브 WH LK":"침구","26SS OLO CLASSIC A 내추럴 GK":"프레임","25SS SMS리본패드 IV GK":"침구","ARLA":"프레임","25SS SMS올시즌 구스 듀벳 SS":"침구","M(Herbal) W-Class A QE":"매트리스","N32 HARD Seacell_KK":"매트리스","M(Fusion) G-Class B KK":"매트리스","26SS SMS 프란시스 마엘리 NA KK":"침구","LAVIE":"프레임","23SS ARLA 베이지 QE":"프레임","KNH구스레어":"침구","M(Helen) W-Class A KK":"매트리스","SMS구스 토퍼 슬리브":"침구","N32 Seacell":"매트리스","25SS BR Centennial ED 뉴트럴그레이 SS":"프레임","N32 SOFT Seacell (B) SS":"매트리스","26SS N32 퀸즈밀러 오가닉 비건 필로우":"침구","Raven":"매트리스","25SS N32매트리스 솔리드 커버 A IV QE":"침구","Helen":"매트리스","25SS SMS패드 IV SS":"침구","M(Tangerine) W-Class A LK":"매트리스","25SS SMS방수베개커버 WH":"침구","N32 REGULAR TOPPER Seacell_SS":"매트리스","VISCOSPRING":"침구","25SS TAN 내추럴오크 LK":"프레임","23SS ARLA 블랙 GK":"프레임","24SS VAIA A 매트웜그레이 SS":"프레임","24SS KNH프란시스 플래드 PK GK":"침구","M(Vive) G-Class A QE":"매트리스","25SS LAVIE A 샌드그레이 QE":"프레임","Zzoggomi":"매트리스","M(Sweet) P-Class A KK":"매트리스","26SS LEVELLE A 스모크월넛 SS":"프레임","Vive":"매트리스","25SS SMS 화이트컬렉션 로니 WH GK/KK":"침구","25SS TAN 내추럴오크 GK":"프레임","M(Lucile) W-Class A LK":"매트리스","M(Marion) P-Class B KK":"매트리스","23FW N32 토퍼백 NA LK":"침구","Marion":"매트리스","Marconi":"매트리스","23SS ARLA 블랙 LK":"프레임","M(Edison) G-Class A QE":"매트리스","CALIXⅡ":"프레임","M(Lucile) W-Class A QE":"매트리스","25SS 쿨링 구스 듀벳 SS":"침구","22FW N32 토퍼 방수 슬리브 WH SS":"침구","25SS SMS프란시스 아트니 CH GK":"침구","Giselle":"매트리스","N32 토퍼 슬리브":"침구","TRIC":"프레임","KNH퀸즈밀러":"침구","N32 HARD Seacell (B) QE":"매트리스","16SS KNH구스레어 라이트 SS":"침구","M(Helen) W-Class A SS":"매트리스","26SS SMS 베네딕트 오네르 WH SS":"침구","25SS SMS프란시스 코르티 MU GK/KK":"침구","21FW KNH퀸즈밀러 프리미엄 구스듀벳 SS":"침구","N32 REGULAR Seacell (B) QE":"매트리스","N32 리본패드":"침구","21FW TOTTEN(사이드테이블) 그레이 대※단종예정":"퍼니처","17SS ROWL  도브화이트 KK":"프레임","M(Kelly) W-Class A QE":"매트리스","21FW LEUTE 그레이 GK※단종예정":"프레임","25SS TAN 내추럴오크 KK":"프레임","25SS N32매트리스 솔리드 커버 A IV GK":"침구","FIBER":"침구","21SS FARNET(소파1인) 블루":"퍼니처","26SS SMS 프란시스 마엘리 NA LK":"침구","M(Bernard) P-Class B GK":"매트리스","23FW N32 토퍼백 NA KK":"침구","N32 폼매트리스":"매트리스","Sweet":"매트리스","Edison":"매트리스","M(Raven) P-Class B LK":"매트리스","Herbal":"매트리스","M(Giselle) G-Class A KK":"매트리스","24FW 101번 스마트 협탁 라이트노체":"퍼니처","N32 HARD Seacell (B) SS":"매트리스","RASID":"프레임","N32 퀸즈밀러 오가닉":"침구","24SS ROPI Ⅱ  더스티핑크 QE":"프레임","25SS LAVIE A 샌드그레이 LK":"프레임","SMS 마엘리":"침구","M(Marconi) G-Class C KK":"매트리스","25SS SMS퀸즈밀러 프리미엄 구스듀벳 LK":"침구","22FW N32 토퍼 체크 슬리브 PK LK":"침구","26SS LEVELLE A 스모크월넛 GK":"프레임","M(Citrus) G-Class A GK":"매트리스","KNH프릴패드":"침구","M(Eggar) G-Class A LK":"매트리스","M(Vive) G-Class A SS":"매트리스","25SS N32매트리스 솔리드 커버 A IV KK":"침구","M(Helen) W-Class A QE":"매트리스","25SS SMS매트리스 솔리드 커버 A IV SS":"침구","M(Edison) G-Class A LK":"매트리스","23SS ARLA 블랙 KK":"프레임","26SS OLO CLASSIC A 내추럴 SS":"프레임","25SS LAVIE A 샌드그레이 GK":"프레임","M(Lucile) W-Class A GK":"매트리스","M(Herbal) W-Class A LK":"매트리스","M(Loren) P-Class A LK":"매트리스","M(Henry) P-Class B KK":"매트리스","20FW CALIXⅡ  콜드그레이 LK":"프레임","25SS SMS리본패드 IV KK":"침구","M(Henry) P-Class B LK":"매트리스","M(Raven) P-Class B QE":"매트리스","25SS SMS화이트컬렉션 루밀라 WH QE":"침구","쿨링 구스 듀벳":"침구","N32 REGULAR Seacell (B) GK":"매트리스","주문M(Loren) P-A 190-200,197.5-210":"매트리스","25SS SMS매트리스 솔리드 커버 A IV KK":"침구","M(Hub) P-Class A GK":"매트리스","William":"매트리스","M(Giselle) G-Class A LK":"매트리스","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 SS":"침구","Citrus":"매트리스","N32 Regular Topper 방수슬리브 KK":"침구","MONCLOS":"기타","BRUBECK":"퍼니처","25FW CANUS N32 모션베드_A (카멜) 브라운 LK":"프레임","25SS SMS방수매트커버 WH LK":"침구","26SS HAWTI N32모션베드_A(카멜) 내추럴오크 TSS":"프레임","23SS ARLA 블랙 SS":"프레임","25SS SMS구스 토퍼 워터프루프 슬리브 WH LK":"침구","M(Herbal) W-Class A KK":"매트리스","26SS 101번 스마트 협탁 내추럴블랙":"퍼니처","25SS SMS매트리스 쿨링 패드 WH KK":"침구","Fusion":"매트리스","25SS SMS매트리스 솔리드 커버 A IV QE":"침구","26SS SMS 시즌브리즈 울 필로우":"침구","FLATO":"프레임","24SS LILLIAN  라이트그레이 SS":"프레임","M(Vive) G-Class A KK":"매트리스","M(Brigitte) G-Class A LK":"매트리스","24SS LILLIAN  라이트그레이 GK":"프레임","20FW CALIXⅡ  콜드그레이 SS":"프레임","SMS 리본패드":"침구","N32 화이버 필로우":"침구","M(Kelly) W-Class A KK":"매트리스","24SS VAIA A 매트웜그레이 LK":"프레임","22FW N32 토퍼 ST 슬리브 NV SS":"침구","M(Fusion) G-Class B SS":"매트리스","M(Loren) P-Class A KK":"매트리스","25SS SMS화이트컬렉션 루밀라 WH SS":"침구","25SS SMS매트리스 솔리드 커버 IV KK":"침구","24SS VAIA A 매트웜그레이 GK":"프레임","21SS RASID 베이지 KK":"프레임","23FW N32 토퍼백 NA QE":"침구","22FW N32 토퍼 방수 슬리브 WH QE":"침구","26SS TEPI A 빈티지라왕 QE":"프레임","TAN":"프레임","OLO":"프레임","HAWTI":"프레임","25SS SMS프란시스 아트니 CH KK":"침구","26SS TEPI A 빈티지라왕 LK":"프레임","25SS BR Centennial ED 뉴트럴그레이 KK":"프레임","N32 Regular Topper 방수슬리브 GK":"침구","25SS SMS매트리스 솔리드 커버 IV LK":"침구","M(Herbal) W-Class A GK":"매트리스","25SS 쿨링 구스 듀벳 GK":"침구","N32 Spring Mattress Regular _SS":"매트리스","N32 TOPPER REGULAR A LK":"매트리스","22FW N32 토퍼 체크 슬리브 PK SS":"침구","M(Marion) P-Class B GK":"매트리스","VAIA":"프레임","M(Marconi) G-Class C QE":"매트리스","M(Brigitte) G-Class A SS":"매트리스","21SS RASID 베이지 SS":"프레임","M(William) G-Class A SS":"매트리스","M(Citrus) G-Class A SS":"매트리스","Henry":"매트리스","25SS SMS화이트컬렉션 루밀라 WH GK/KK":"침구","26SS N32 아이슬란드 씨셀™ 화이버 필로우":"침구","N32 Spring Mattress Hard _SS":"매트리스","25SS SMS구스 토퍼 페이즐리 슬리브 WH GK":"침구","25SS SMS프란시스 아트니 CH SS":"침구","25SS SMS구스 토퍼 페이즐리 슬리브 WH QE":"침구","Lucile":"매트리스","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 GK/KK":"침구","16SS KNH구스레어 라이트 LK":"침구","23FW N32 토퍼백 NA SS":"침구","16FW D2178 A 라이트노체 SS":"프레임","M(Hub) P-Class A KK":"매트리스","22FW N32 토퍼 방수 슬리브 WH KK":"침구","22FW N32 토퍼 체크 슬리브 PK KK":"침구","M(Tangerine) W-Class A QE":"매트리스","21SS RASID 베이지 GK":"프레임","25SS SMS올시즌 구스 듀벳 GK/KK":"침구","26SS FLATO 라이트카키 SS":"프레임","25SS SMS매트리스 쿨링 패드 WH LK":"침구","N32 REGULAR Seacell (B) SS":"매트리스","26SS TEPI A 빈티지라왕 SS":"프레임","M(Fusion) G-Class B QE":"매트리스","N32 TOPPER":"침구","25SS SMS퀸즈밀러 듀얼 존 구스 필로우":"침구","M(Jasmine) G-Class A LK":"매트리스","26SS FLATO 라이트카키 QE":"프레임","SMS솔리드 커버":"침구","22FW N32 토퍼 체크 슬리브 PK QE":"침구","N32 Regular Topper 방수슬리브 SS":"침구","M(Citrus) G-Class A QE":"매트리스","M(Loren) P-Class A QE":"매트리스","21SS RASID 베이지 LK":"프레임","M(Sweet) P-Class A LK":"매트리스","Tangerine":"매트리스","25SS TAN 내추럴오크 QE":"프레임","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 KK":"침구","26SS TEPI A 빈티지라왕 KK":"프레임","25FW BAUD N32 모션베드 (라이트그레이) 내추럴오크 LK":"프레임","25SS SMS구스 토퍼 워터프루프 슬리브 WH QE":"침구","SMS블랙포레스트":"침구","M(Henry) P-Class B GK":"매트리스","25SS SMS방수매트커버 WH SS":"침구","M(Sweet) P-Class A QE":"매트리스","M(Giselle) G-Class A QE":"매트리스","KNH블랙포레스트":"침구","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 QE":"침구","26SS TEPI A 빈티지라왕 GK":"프레임","25SS SMS구스 토퍼 워터프루프 슬리브 WH GK":"침구","N32 REGULAR Seacell (B) KK":"매트리스","22FW N32 토퍼 방수 슬리브 WH GK":"침구","M(Eggar) G-Class A KK":"매트리스","SF(S-Type)":"프레임","25SS SMS 프란시스 아니쉬 NA GK/KK":"침구","N32 REGULAR Seacell (B) LK":"매트리스","M(Marconi) G-Class C LK":"매트리스","M(Eleanor) W-Class A KK":"매트리스","N32 HARD Seacell (B) LK":"매트리스","M(Bernard) P-Class B KK":"매트리스","SMS 로니":"침구","M(Hub) P-Class A SS":"매트리스","M(Loren) P-Class A SS":"매트리스","26SS SMS 베네딕트 오네르 WH LK":"침구","Centennial":"프레임","M(Brigitte) G-Class A KK":"매트리스","25FW N32 모션베드_A (라이트그레이) QE":"프레임","KNH프란시스":"침구","21FW D2178 A 베이지 QE":"프레임","21FW D2178 A 베이지 LK":"프레임","ROWL":"프레임","26SS SMS 100수 리본패드 WH SS":"침구","26SS SMS 100수 리본패드 WH LK":"침구","M(Edison) G-Class A GK":"매트리스","25SS BR Centennial ED 뉴트럴그레이 GK":"프레임","23FW N32 토퍼 방수 슬리브 WH KK":"침구","M(Herbal) W-Class A SS":"매트리스","M(Helen) W-Class A GK":"매트리스","25SS BR Centennial ED 뉴트럴그레이 QE":"프레임","26SS FLATO 라이트카키 KK":"프레임","ROPI":"프레임","22FW N32 토퍼 체크 슬리브 PK GK":"침구","24SS LILLIAN  라이트그레이 QE":"프레임","M(Eleanor) W-Class A QE":"매트리스","M(Giselle) G-Class A GK":"매트리스","M(Kelly) W-Class A SS":"매트리스","26SS D2178 A 내추럴블랙 QE":"프레임","25SS SMS구스 토퍼 페이즐리 슬리브 WH LK":"침구","24SS LILLIAN  라이트그레이 KK":"프레임","21FW D2178 A 베이지 GK":"프레임","25SS SMS퀸즈밀러 프리미엄 구스듀벳 SS":"침구","24SS KNH프란시스 플래드 PK LK":"침구","M(Jasmine) G-Class A GK":"매트리스","25SS 쿨링 구스 듀벳 KK":"침구","M(Marconi) G-Class C SS":"매트리스","25FW N32 모션베드_A (카멜) SS":"프레임","SMS퀸즈밀러":"침구","M(Fusion) G-Class B GK":"매트리스","M(Eleanor) W-Class A SS":"매트리스","N32 Regular Topper 방수슬리브 QE":"침구","25FW N32 모션베드_A (라이트그레이) GK":"프레임","25SS TAN(Storage) 내추럴오크 QE":"프레임","25SS 쿨링 구스 듀벳 LK":"침구","M(Marconi) G-Class C GK":"매트리스","25SS SMS 올 시즌 쿨링 스프레드 & 필로우 커버 LK":"침구","SMS리본패드":"침구","25SS SMS블랙포레스트 구스 듀얼 서포트 토퍼 GK":"침구","SMS패드":"침구","26SS SMS 베네딕트 오네르 WH GK":"침구","SMS 오네르":"침구"};
 const TYPE_NAMES = {consult:'상담접수', as:'AS 접수', done:'AS 완료'};
 const palette = ['#3B82F6','#F59E0B','#10B981','#7C3AED','#DC2626','#06B6D4','#EC4899','#84CC16','#F97316'];
 
@@ -1225,6 +1234,7 @@ let longLeadData = [];
 let repeat2Data = [];
 let repeat2Collapsed = false;
 let catGroupMap = {};
+let productMapClearedThisSession = false; // 삭제 후 syncFromSupabase 복원 차단용
 
 function getDisplayData(){ return searchData !== null ? searchData : filteredData; }
 
@@ -1260,8 +1270,11 @@ function loadFromStorage(){
   }catch(e){ productMap = {}; productLoaded = false; }
   try{
     const cg = localStorage.getItem(STORAGE_CATGROUP);
-    if(cg) catGroupMap = JSON.parse(cg);
-  }catch(e){ catGroupMap = {}; }
+    const stored = cg ? JSON.parse(cg) : {};
+    // Excel 데이터 우선 적용, Excel에 없는 모델만 저장된 수동 분류 유지
+    catGroupMap = Object.assign({}, stored, EXCEL_CAT_MAP);
+    localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(catGroupMap));
+  }catch(e){ catGroupMap = {...EXCEL_CAT_MAP}; }
 
   // ── 마이그레이션: AS완료 레코드의 date/ym을 수리완료일 기준으로 교정 ──
   let migrated = false;
@@ -1297,9 +1310,10 @@ async function syncFromSupabase(){
     let changed = false;
     if(d !== null && JSON.stringify(d) !== JSON.stringify(rawData)){ rawData = d; try{ localStorage.setItem(STORAGE_DATA, JSON.stringify(d)); }catch(e){} changed = true; }
     if(f !== null){ fileRegistry = f; try{ localStorage.setItem(STORAGE_FILES, JSON.stringify(f)); }catch(e){} }
-    if(pm !== null){ productMap = pm; productLoaded = true; try{ localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(pm)); }catch(e){} }
-    if(pf !== null){ productFilename = pf; try{ localStorage.setItem(STORAGE_PRODFILE, pf); }catch(e){} }
-    if(cg !== null){ catGroupMap = cg; try{ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(cg)); }catch(e){} }
+    if(pm !== null && !productMapClearedThisSession){ productMap = pm; productLoaded = true; try{ localStorage.setItem(STORAGE_PRODMAP, JSON.stringify(pm)); }catch(e){} updateProdHeader(); }
+    else if(pm !== null && productMapClearedThisSession){ sbDelete(STORAGE_PRODMAP).catch(()=>{}); sbDelete(STORAGE_PRODFILE).catch(()=>{}); }
+    if(pf !== null && !productMapClearedThisSession){ productFilename = pf; try{ localStorage.setItem(STORAGE_PRODFILE, pf); }catch(e){} }
+    if(cg !== null){ catGroupMap = Object.assign({}, cg, EXCEL_CAT_MAP); try{ localStorage.setItem(STORAGE_CATGROUP, JSON.stringify(catGroupMap)); }catch(e){} }
     // 클라우드 데이터로 업데이트된 경우 대시보드 재렌더
     if(changed){
       updateProdHeader();
@@ -1447,14 +1461,26 @@ function closeProdPanel(){
 }
 
 function renderProdPanel(){
+  const CAT_STYLE={
+    '매트리스':{bg:'#DBEAFE',color:'#1D4ED8'},
+    '프레임'  :{bg:'#EDE9FE',color:'#6D28D9'},
+    '침구'    :{bg:'#D1FAE5',color:'#065F46'},
+    '퍼니처'  :{bg:'#FEF3C7',color:'#92400E'},
+    '기타'    :{bg:'#F3F4F6',color:'#6B7280'},
+  };
   const entries=Object.entries(productMap);
   document.getElementById('pp-filename').textContent=productFilename||'';
   const tbody=document.getElementById('pp-tbody');
-  tbody.innerHTML=entries.map(([full,short],i)=>`
-    <tr data-full="${escHtml(full).toLowerCase()}" data-short="${escHtml(short).toLowerCase()}">
+  tbody.innerHTML=entries.map(([full,short])=>{
+    const cat=catGroupMap[full]||catGroupMap[short]||'미분류';
+    const s=CAT_STYLE[cat]||{bg:'#F3F4F6',color:'#6B7280'};
+    const badge=`<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${s.bg};color:${s.color}">${escHtml(cat)}</span>`;
+    return `<tr data-full="${escHtml(full).toLowerCase()}" data-short="${escHtml(short).toLowerCase()}" data-cat="${escHtml(cat).toLowerCase()}">
       <td style="color:var(--g600);font-size:11px">${escHtml(full)}</td>
       <td>${escHtml(short)}</td>
-    </tr>`).join('');
+      <td style="text-align:center">${badge}</td>
+    </tr>`;
+  }).join('');
   document.getElementById('pp-count-info').textContent=`총 ${entries.length.toLocaleString()}개 항목`;
 }
 
@@ -1463,7 +1489,7 @@ function filterProdTable(q){
   const rows=document.querySelectorAll('#pp-tbody tr');
   let vis=0;
   rows.forEach(tr=>{
-    const show=!lo||tr.dataset.full.includes(lo)||tr.dataset.short.includes(lo);
+    const show=!lo||tr.dataset.full.includes(lo)||tr.dataset.short.includes(lo)||tr.dataset.cat.includes(lo);
     tr.style.display=show?'':'none';
     if(show) vis++;
   });
@@ -1474,13 +1500,14 @@ function filterProdTable(q){
 
 function resetProdMap(){
   const cnt=Object.keys(productMap).length;
-  requirePassword('제품명 매핑을 삭제하려면 비밀번호를 입력하세요.', ()=>{
+  requirePassword('제품명 매핑을 삭제하려면 비밀번호를 입력하세요.', async ()=>{
     if(!confirm(`제품명 매핑 ${cnt}개를 삭제하시겠습니까?\n삭제 후 모델명이 원본 전체명으로 표시됩니다.`)) return;
+    productMapClearedThisSession = true; // syncFromSupabase 복원 차단
     productMap={}; productLoaded=false; productFilename='';
     localStorage.removeItem(STORAGE_PRODMAP);
     localStorage.removeItem(STORAGE_PRODFILE);
-    sbDelete(STORAGE_PRODMAP).catch(()=>{});
-    sbDelete(STORAGE_PRODFILE).catch(()=>{});
+    await sbDelete(STORAGE_PRODMAP).catch(()=>{});
+    await sbDelete(STORAGE_PRODFILE).catch(()=>{});
     rawData.forEach(r=>{ r.modelDisplay=normalizeModel(r.model); });
     saveToStorage();
     updateProdHeader();
@@ -3587,7 +3614,7 @@ function renderRepeatCustomers(data){
   } else {
     const sub1=document.getElementById('repeat-sub1');
     const sub2=document.getElementById('repeat-sub2');
-    if(sub1) sub1.textContent='2회 이상 접수 고객';
+    if(sub1) sub1.textContent='1회 이상 재접수 고객';
     if(sub2) sub2.textContent='전체 고객 대비';
   }
 
@@ -3617,10 +3644,11 @@ function renderRepeatCustomers(data){
     plugins:[ChartDataLabels]
   });
 
-  // 재접수 다발 제품 Top10
-  const rptS=Object.entries(modelRepeat)
+  // 재접수 다발 제품 전체 목록 (Top10 테이블 + 카테고리별 Top3에 공용)
+  const rptAll=Object.entries(modelRepeat)
     .map(([k,v])=>({name:k,n:v.size}))
-    .sort((a,b)=>b.n-a.n).slice(0,10);
+    .sort((a,b)=>b.n-a.n);
+  const rptS=rptAll.slice(0,10);
   let html='';
   rptS.forEach((item,i)=>{
     const modelTotalRepeats=[...modelRepeat[item.name]].reduce((s,cid)=>(s+(repeatCustCnt[cid]||0)),0);
@@ -3634,70 +3662,86 @@ function renderRepeatCustomers(data){
   document.getElementById('repeat-tbody').innerHTML=html||
     '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--g400)">재접수 데이터 없음<br><small>같은 고객·같은 제품·D+1 이상 재접수 없음</small></td></tr>';
 
-  // ── Top3 모델 증상 분석 카드 ──
+  // ── Top3 모델 증상 분석 카드 (카테고리별) ──
   const SYM2_COL={'제품불만':'#DC2626','고객과실':'#F59E0B','매장불만':'#7C3AED','취소/환불':'#6B7280','설치불만':'#3B82F6'};
   const MEDALS=['🥇','🥈','🥉'];
   const HEAD_BG=['#0B1437','#1e3a5f','#2d4a6b'];
-  const top3models=rptS.slice(0,3);
-  let cardsHtml='';
-  top3models.forEach(({name:model,n:custCount},mi)=>{
-    const custIds=modelRepeat[model];
-    const recs=data.filter(r=>{
-      const m=(r.modelDisplay||r.model||'').trim();
-      return r.status==='consult'&&m===model&&r.customerId&&custIds.has(r.customerId.trim());
-    });
-    const total=recs.length||1;
-    // 귀책구분
-    const s2={};
-    recs.forEach(r=>{const k=r.sym2||'기타';s2[k]=(s2[k]||0)+1;});
-    const s2arr=Object.entries(s2).sort((a,b)=>b[1]-a[1]).slice(0,4);
-    const s2max=s2arr[0]?.[1]||1;
-    const s2html=s2arr.map(([k,v])=>{
-      const pct=Math.round(v/total*100);
-      const col=SYM2_COL[k]||'#9CA3AF';
-      return `<div class="t3-bar-row">
-        <div class="t3-bar-lbl" title="${escHtml(k)}">${escHtml(k)}</div>
-        <div class="t3-bar-tr"><div class="t3-bar-fill" style="width:${Math.round(v/s2max*100)}%;background:${col}"></div></div>
-        <div class="t3-bar-pct">${pct}%</div>
-      </div>`;
-    }).join('')||'<div style="font-size:11px;color:var(--g400)">데이터 없음</div>';
-    // 증상소 Top5
-    const s3={};
-    recs.forEach(r=>{if(r.sym3&&r.sym3.trim()){const k=r.sym3.trim();s3[k]=(s3[k]||0)+1;}});
-    const s3arr=Object.entries(s3).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const s3html=s3arr.map(([k,v],i)=>
-      `<div class="t3-sym-row">
-        <span class="t3-sym-name"><span style="color:var(--g400);margin-right:3px">${i+1}.</span>${escHtml(k)}</span>
-        <span class="t3-sym-cnt">${v}건</span>
-      </div>`
-    ).join('')||'<div style="font-size:11px;color:var(--g400)">데이터 없음</div>';
-    // 유무상
-    let noW=0,yesW=0;
-    recs.forEach(r=>{if(r.warranty&&r.warranty.includes('무'))noW++;else if(r.warranty)yesW++;});
-    const noWP=recs.length?Math.round(noW/recs.length*100):0;
-    cardsHtml+=`<div class="t3-card">
-      <div class="t3-head" style="background:${HEAD_BG[mi]||'#0B1437'}">
-        <div class="t3-rank">${MEDALS[mi]} ${mi+1}위</div>
-        <div class="t3-model" title="${escHtml(model)}">${escHtml(model)}</div>
-        <div class="t3-cnt">재접수 고객 ${custCount}명 · 상담 ${recs.length}건</div>
-      </div>
-      <div class="t3-body">
-        <div class="t3-stitle">귀책구분</div>
-        ${s2html}
-        <div class="t3-stitle">주요 증상 Top5</div>
-        ${s3html}
-        <div class="t3-stitle">유무상</div>
-        <div class="t3-wrow">
-          <div class="t3-witem"><div class="t3-wlbl">무상</div><div class="t3-wval" style="color:#10B981">${noWP}%</div></div>
-          <div class="t3-witem"><div class="t3-wlbl">유상</div><div class="t3-wval" style="color:#3B82F6">${100-noWP}%</div></div>
-          <div class="t3-witem"><div class="t3-wlbl">총 상담</div><div class="t3-wval" style="color:var(--navy)">${recs.length}건</div></div>
-        </div>
-      </div>
-    </div>`;
+
+  // 모델명 → 카테고리 맵
+  const modelToGroup={};
+  data.filter(r=>r.status==='consult').forEach(r=>{
+    const model=(r.modelDisplay||r.model||'').trim();
+    if(model&&!modelToGroup[model]) modelToGroup[model]=getModelGroup(r);
   });
-  const top3El=document.getElementById('top3-cards');
-  if(top3El) top3El.innerHTML=cardsHtml||
-    '<div style="text-align:center;padding:24px;color:var(--g400);font-size:12px;grid-column:span 3">재접수 모델 데이터 없음</div>';
+
+  // 카드 HTML 빌더 (카테고리별 Top3 공용)
+  const buildCatCards=(catModels)=>{
+    if(!catModels.length) return '<div style="text-align:center;padding:20px;color:var(--g400);font-size:12px;grid-column:span 3">재접수 모델 없음</div>';
+    return catModels.map(({name:model,n:custCount},mi)=>{
+      const custIds=modelRepeat[model];
+      const recs=data.filter(r=>{
+        const m=(r.modelDisplay||r.model||'').trim();
+        return r.status==='consult'&&m===model&&r.customerId&&custIds.has(r.customerId.trim());
+      });
+      const total=recs.length||1;
+      const s2={};
+      recs.forEach(r=>{const k=r.sym2||'기타';s2[k]=(s2[k]||0)+1;});
+      const s2arr=Object.entries(s2).sort((a,b)=>b[1]-a[1]).slice(0,4);
+      const s2max=s2arr[0]?.[1]||1;
+      const s2html=s2arr.map(([k,v])=>{
+        const pct=Math.round(v/total*100);
+        const col=SYM2_COL[k]||'#9CA3AF';
+        return `<div class="t3-bar-row">
+          <div class="t3-bar-lbl" title="${escHtml(k)}">${escHtml(k)}</div>
+          <div class="t3-bar-tr"><div class="t3-bar-fill" style="width:${Math.round(v/s2max*100)}%;background:${col}"></div></div>
+          <div class="t3-bar-pct">${pct}%</div>
+        </div>`;
+      }).join('')||'<div style="font-size:11px;color:var(--g400)">데이터 없음</div>';
+      const s3={};
+      recs.forEach(r=>{if(r.sym3&&r.sym3.trim()){const k=r.sym3.trim();s3[k]=(s3[k]||0)+1;}});
+      const s3arr=Object.entries(s3).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const s3html=s3arr.map(([k,v],i)=>
+        `<div class="t3-sym-row">
+          <span class="t3-sym-name"><span style="color:var(--g400);margin-right:3px">${i+1}.</span>${escHtml(k)}</span>
+          <span class="t3-sym-cnt">${v}건</span>
+        </div>`
+      ).join('')||'<div style="font-size:11px;color:var(--g400)">데이터 없음</div>';
+      let noW=0;
+      recs.forEach(r=>{if(r.warranty&&r.warranty.includes('무'))noW++;});
+      const noWP=recs.length?Math.round(noW/recs.length*100):0;
+      return `<div class="t3-card">
+        <div class="t3-head" style="background:${HEAD_BG[mi]||'#0B1437'}">
+          <div class="t3-rank">${MEDALS[mi]} ${mi+1}위</div>
+          <div class="t3-model" title="${escHtml(model)}">${escHtml(model)}</div>
+          <div class="t3-cnt">재접수 고객 ${custCount}명 · 상담 ${recs.length}건</div>
+        </div>
+        <div class="t3-body">
+          <div class="t3-stitle">귀책구분</div>
+          ${s2html}
+          <div class="t3-stitle">주요 증상 Top5</div>
+          ${s3html}
+          <div class="t3-stitle">유무상</div>
+          <div class="t3-wrow">
+            <div class="t3-witem"><div class="t3-wlbl">무상</div><div class="t3-wval" style="color:#10B981">${noWP}%</div></div>
+            <div class="t3-witem"><div class="t3-wlbl">유상</div><div class="t3-wval" style="color:#3B82F6">${100-noWP}%</div></div>
+            <div class="t3-witem"><div class="t3-wlbl">총 상담</div><div class="t3-wval" style="color:var(--navy)">${recs.length}건</div></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  // 카테고리별 Top3 렌더
+  [
+    {cat:'매트리스', elId:'top3-mat-cards'},
+    {cat:'프레임',   elId:'top3-frame-cards'},
+    {cat:'침구',     elId:'top3-bed-cards'},
+    {cat:'퍼니처',   elId:'top3-furn-cards'},
+  ].forEach(({cat,elId})=>{
+    const catModels=rptAll.filter(({name})=>modelToGroup[name]===cat).slice(0,3);
+    const el=document.getElementById(elId);
+    if(el) el.innerHTML=buildCatCards(catModels);
+  });
 
   // 재접수 2회+ 고객 접수번호 테이블 — 고객 총 재접수 기준(KPI/도넛과 동일)
   const rpt2Rows=[];
@@ -4063,11 +4107,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initMonthPickers();
   loadFromStorage();       // 동기 — 즉시 완료
   updateHdStatus();
-  if(rawData.length){
-    showScreen('dash');   // 내부에서 initDashboard() 호출됨
-  } else {
-    showScreen('dash');   // empty state visible
-  }
+  showScreen('dash'); // 내부에서 rawData 여부에 따라 dashboard or empty state 표시
   syncFromSupabase();     // 백그라운드 — 블로킹 없음
 });
 // ══════════════════════════════════════
@@ -4088,8 +4128,9 @@ function requirePassword(desc, callback){
 function submitPw(){
   const val = document.getElementById('pw-input').value;
   if(val === DASHBOARD_PW){
+    const cb = _pwCallback;  // closePwModal이 null로 초기화하기 전에 저장
     closePwModal();
-    if(_pwCallback) _pwCallback();
+    if(cb) cb();
   } else {
     const inp = document.getElementById('pw-input');
     inp.classList.add('pw-error');
