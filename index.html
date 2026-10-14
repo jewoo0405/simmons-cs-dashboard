@@ -388,16 +388,15 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
       <!-- FILTER BAR -->
       <div id="filter-bar">
         <span class="fb-label">기간</span>
-        <input type="month" id="f-start" class="fb-input">
+        <input type="month" id="f-start" class="fb-input" onchange="applyFilters()">
         <span style="color:var(--g400)">~</span>
-        <input type="month" id="f-end" class="fb-input">
+        <input type="month" id="f-end" class="fb-input" onchange="applyFilters()">
         <div class="fb-sep"></div>
         <span class="fb-label">유무상</span>
-        <select id="f-warranty" class="fb-select"><option value="">전체</option></select>
+        <select id="f-warranty" class="fb-select" onchange="applyFilters()"><option value="">전체</option></select>
         <div class="fb-sep"></div>
         <span class="fb-label">제품유형</span>
-        <select id="f-prodtype" class="fb-select"><option value="">전체</option></select>
-        <button class="btn-apply" onclick="applyFilters()">적용</button>
+        <select id="f-prodtype" class="fb-select" onchange="applyFilters()"><option value="">전체</option></select>
         <button class="btn-clear" onclick="clearFilters()">초기화</button>
         <span id="fb-count"></span>
       </div>
@@ -406,7 +405,7 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
       <div id="search-bar">
         <div id="search-wrap">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="search-input" placeholder="모델명 또는 증상 검색  (예: Henry,  냄새,  내용물꺼짐,  머리판)" oninput="onSearch(this.value)">
+          <input type="text" id="search-input" placeholder="접수번호·모델명·증상 검색  (예: CS2025-001,  Henry,  냄새,  머리판)" oninput="onSearch(this.value)">
         </div>
         <div id="search-tag">
           <span id="search-tag-text"></span>
@@ -583,7 +582,7 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
             <div class="sec-title">월별 추이</div>
             <span id="trend-badge" class="badge-search" style="display:none"></span>
           </div>
-          <div style="position:relative;height:240px"><canvas id="trend-chart"></canvas></div>
+          <div style="position:relative;height:280px"><canvas id="trend-chart"></canvas></div>
         </div>
         <div class="sec" style="margin-bottom:0">
           <div class="sec-hd">
@@ -641,6 +640,15 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
 
       <!-- ▸ TAB 2: 품질 분석 -->
       <div id="tab-quality" style="display:none">
+        <!-- 증상 급증 감지 -->
+        <div class="sec" style="margin-bottom:16px">
+          <div class="sec-hd">
+            <div class="sec-icon">🚨</div>
+            <div class="sec-title">증상 급증 감지</div>
+            <div class="sec-note">직전월 대비 증상(소) 기준 · 증가폭 Top 3 · 필터 기간의 최신 월 기준</div>
+          </div>
+          <div id="surge-alert-wrap"></div>
+        </div>
         <!-- 위험 모델 TOP3 카드 -->
         <div class="risk-cards" id="risk-cards"></div>
         <!-- 위험 모델 전체 테이블 -->
@@ -689,10 +697,22 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
             </div>
           </div>
         </div>
-        <!-- 증상(소)별 평균 처리기간 -->
+        <!-- 재접수 Top3 모델 증상 분석 -->
         <div class="sec" style="margin-top:16px">
+          <div class="sec-hd"><div class="sec-icon">🔄</div><div class="sec-title">재접수 Top3 모델 증상 분석</div><div class="sec-note">해당 모델 재접수 고객의 상담접수 이력 기준 · 카테고리별 Top3</div></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #DBEAFE;margin-bottom:10px">🛏 매트리스</div>
+          <div id="top3-mat-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #EDE9FE;margin-bottom:10px">🪵 프레임</div>
+          <div id="top3-frame-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #D1FAE5;margin-bottom:10px">🧺 침구</div>
+          <div id="top3-bed-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #FEF3C7;margin-bottom:10px">🪑 퍼니처</div>
+          <div id="top3-furn-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+        </div>
+        <!-- 증상(소)별 평균 처리기간 -->
+        <div class="sec" style="margin-top:16px;margin-bottom:0">
           <div class="sec-hd">
-            <div class="sec-icon">🔬</div>
+            <div class="sec-icon">⏱️</div>
             <div class="sec-title">증상(소)별 평균 처리기간</div>
             <div class="sec-note">📂 AS완료.xlsx · 유형별 증상(소) 기준 · 2건 이상 증상만 표시 · 색상: 초록≤7일 / 주황≤14일 / 빨강>14일</div>
           </div>
@@ -714,18 +734,6 @@ main{padding:18px 24px;max-width:1680px;margin:0 auto}
               <div id="symLead-furn-wrap" style="position:relative;height:240px"><canvas id="symLead-furn"></canvas></div>
             </div>
           </div>
-        </div>
-        <!-- 재접수 Top3 모델 증상 분석 -->
-        <div class="sec" style="margin-top:16px;margin-bottom:0">
-          <div class="sec-hd"><div class="sec-icon">🔬</div><div class="sec-title">재접수 Top3 모델 증상 분석</div><div class="sec-note">해당 모델 재접수 고객의 상담접수 이력 기준 · 카테고리별 Top3</div></div>
-          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #DBEAFE;margin-bottom:10px">🛏 매트리스</div>
-          <div id="top3-mat-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
-          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #EDE9FE;margin-bottom:10px">🪵 프레임</div>
-          <div id="top3-frame-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
-          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #D1FAE5;margin-bottom:10px">🧺 침구</div>
-          <div id="top3-bed-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
-          <div style="font-size:12px;font-weight:800;color:var(--navy);padding:5px 0;border-bottom:2px solid #FEF3C7;margin-bottom:10px">🪑 퍼니처</div>
-          <div id="top3-furn-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
         </div>
       </div><!-- /tab-quality -->
 
@@ -1572,9 +1580,9 @@ function handleZoneFile(input, type){
       const noIdCount=validRecords.filter(r=>!r.id).length;
       const noDateCount=validRecords.filter(r=>!r.date).length;
 
-      // 필수 컬럼 체크
+      // 필수 컬럼 체크 (유형별 분리)
       const reqCols=['접수번호','접수일자','모델명','증상(대)','유무상구분'];
-      if(type==='as'||type==='done') reqCols.push('수리완료일','완료처리자','액티비티2');
+      if(type==='done') reqCols.push('수리완료일','완료처리자','액티비티2');
       const missingCols=reqCols.filter(c=>idx[c]===undefined);
 
       // 중복 예상 건수
@@ -1924,6 +1932,7 @@ function applySearch(q){
   if(!q){clearSearch();return;}
   const lo=q.toLowerCase();
   searchData=filteredData.filter(r=>
+    (r.id||'').toLowerCase().includes(lo)||
     (r.modelDisplay||r.model||'').toLowerCase().includes(lo)||
     (r.sym1||'').toLowerCase().includes(lo)||
     (r.sym2||'').toLowerCase().includes(lo)||
@@ -2358,18 +2367,43 @@ function renderTrendChart(data){
   const cArr=months.map(m=>data.filter(r=>r.ym===m&&r.status==='consult').length);
   const aArr=months.map(m=>data.filter(r=>r.ym===m&&r.status==='as').length);
   const dArr=months.map(m=>data.filter(r=>r.ym===m&&r.status==='done').length);
+  // AS전환율: AS접수 ÷ 상담접수 × 100 (상담접수 0건 월은 null 처리)
+  const rateArr=months.map((_,i)=>cArr[i]>0?+(aArr[i]/cArr[i]*100).toFixed(1):null);
   if(charts.trend) charts.trend.destroy();
   charts.trend=new Chart(document.getElementById('trend-chart').getContext('2d'),{
     type:'bar',
     data:{labels:months.map(m=>m.replace('-','년 ')+'월'),datasets:[
-      {label:'상담접수',data:cArr,backgroundColor:'#3B82F6BB',borderRadius:4,stack:'a'},
-      {label:'AS접수',data:aArr,backgroundColor:'#F59E0BBB',borderRadius:4,stack:'a'},
-      {label:'AS완료',data:dArr,backgroundColor:'#10B981BB',borderRadius:4,stack:'a'}
+      {label:'상담접수',data:cArr,backgroundColor:'#3B82F6BB',borderRadius:4,stack:'a',yAxisID:'y',datalabels:{display:false}},
+      {label:'AS접수',data:aArr,backgroundColor:'#F59E0BBB',borderRadius:4,stack:'a',yAxisID:'y',datalabels:{display:false}},
+      {label:'AS완료',data:dArr,backgroundColor:'#10B981BB',borderRadius:4,stack:'a',yAxisID:'y',datalabels:{display:false}},
+      {
+        label:'AS전환율',type:'line',data:rateArr,
+        borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,.08)',
+        borderWidth:2,pointBackgroundColor:'#7C3AED',pointRadius:4,pointHoverRadius:6,
+        tension:0.3,fill:false,yAxisID:'y2',
+        datalabels:{
+          display:true,anchor:'top',align:'top',
+          font:{weight:'bold',size:9,family:'Pretendard'},
+          color:'#7C3AED',
+          formatter:v=>v!==null?v+'%':'',
+          padding:{bottom:4}
+        }
+      }
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{family:'Pretendard',size:11}}},datalabels:{display:false}},
-      scales:{x:{grid:{display:false},ticks:{font:{family:'Pretendard',size:11}}},
-              y:{grid:{color:'#F3F4F6'},ticks:{font:{family:'Pretendard',size:11}}}}}
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'Pretendard',size:11}}},
+        datalabels:{display:false}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'Pretendard',size:11}}},
+        y:{position:'left',beginAtZero:true,grid:{color:'#F3F4F6'},border:{display:false},ticks:{font:{family:'Pretendard',size:11}}},
+        y2:{position:'right',beginAtZero:true,max:100,grid:{display:false},border:{display:false},
+          ticks:{font:{family:'Pretendard',size:11},callback:v=>v+'%'},
+          title:{display:true,text:'AS전환율',font:{family:'Pretendard',size:9},color:'#7C3AED'}}
+      },
+      layout:{padding:{top:20}}
+    }
   });
 }
 
@@ -2576,11 +2610,79 @@ function renderReceiptTracker(data) {
 // ══════════════════════════════════════
 function renderTabQuality(data){
   const qd=getQualityData();
+  renderSurgeAlert(data);
   renderRiskModels(qd);
   renderHeatmap(qd);
   renderSymDrilldown(data);
   renderSymLeadChart(data); // AS완료 내부 필터 — 전체 data 필요
   renderRepeatCustomers(data); // 재접수 = 상담접수 내부 필터 — 전체 data 필요
+}
+
+function renderSurgeAlert(data){
+  const el=document.getElementById('surge-alert-wrap');
+  if(!el) return;
+
+  // 필터 범위 내 최신 월 기준
+  const months=[...new Set(data.map(r=>r.ym).filter(Boolean))].sort();
+  if(!months.length){
+    el.innerHTML='<div style="text-align:center;padding:14px;color:var(--g400);font-size:12px">데이터 없음</div>';
+    return;
+  }
+  const curYm=months[months.length-1];
+  const [y,m]=curYm.split('-').map(Number);
+  const prevYm=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
+
+  const curData=data.filter(r=>r.ym===curYm);
+  const prevData=rawData.filter(r=>r.ym===prevYm); // 필터 무관하게 전월 원본
+
+  if(!prevData.length){
+    el.innerHTML=`<div style="text-align:center;padding:14px;color:var(--g400);font-size:12px">전월(${prevYm.replace('-','년 ')}월) 데이터 없음 — 비교 불가</div>`;
+    return;
+  }
+
+  // 증상(소) 건수 집계
+  const curMap={}, prevMap={};
+  curData.forEach(r=>{if(r.sym3&&r.sym3.trim()) curMap[r.sym3]=(curMap[r.sym3]||0)+1;});
+  prevData.forEach(r=>{if(r.sym3&&r.sym3.trim()) prevMap[r.sym3]=(prevMap[r.sym3]||0)+1;});
+
+  // 현재 월에 존재하는 증상 중 전월 대비 증가한 것만 추출
+  const surges=Object.entries(curMap)
+    .map(([sym,cur])=>{
+      const prev=prevMap[sym]||0;
+      const delta=cur-prev;
+      const pct=prev>0?Math.round((cur-prev)/prev*100):null; // null = 신규 증상
+      return {sym,cur,prev,delta,pct};
+    })
+    .filter(s=>s.delta>0)
+    .sort((a,b)=>b.delta-a.delta)
+    .slice(0,3);
+
+  if(!surges.length){
+    el.innerHTML=`<div style="text-align:center;padding:14px;color:#059669;font-size:12px;font-weight:600">✅ 전월 대비 증가한 증상 없음 (${prevYm.replace('-','년 ')}월 → ${curYm.replace('-','년 ')}월)</div>`;
+    return;
+  }
+
+  const COLORS=['#DC2626','#F59E0B','#3B82F6'];
+  const BG=['#FEF2F2','#FFFBEB','#EFF6FF'];
+  const LABELS=['🔴 급증','🟠 증가','🔵 주의'];
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      ${surges.map(({sym,cur,prev,delta,pct},i)=>`
+        <div style="background:${BG[i]};border:1.5px solid ${COLORS[i]}44;border-left:4px solid ${COLORS[i]};border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;color:${COLORS[i]};letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px">${LABELS[i]}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(sym)}">${escHtml(sym)}</div>
+          <div style="font-size:24px;font-weight:800;color:${COLORS[i]};line-height:1;margin-bottom:4px">${cur}건</div>
+          <div style="font-size:11px;color:var(--g500)">
+            전월 ${prev}건 →
+            <b style="color:${COLORS[i]}">+${delta}건</b>
+            ${pct!==null?`<span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:${COLORS[i]}18;color:${COLORS[i]};margin-left:3px">▲${pct}%</span>`:`<span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:${COLORS[i]}18;color:${COLORS[i]};margin-left:3px">신규</span>`}
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--g400)">
+      📅 ${prevYm.replace('-','년 ')}월 → ${curYm.replace('-','년 ')}월 비교 · 증상(소) 기준 · 증가폭(건수) 내림차순
+    </div>`;
 }
 
 function renderSymDrilldown(data){
@@ -3756,6 +3858,7 @@ function renderRepeatCustomers(data){
   });
   rpt2Rows.sort((a,b)=>b.custTotal-a.custTotal||b.recontacts-a.recontacts);
   repeat2Data=rpt2Rows; // 다운로드용 저장
+  const repeat2Total=rpt2Rows.length;
   let html2='';
   rpt2Rows.slice(0,50).forEach(row=>{
     const history=row.days.map((day,idx)=>{
@@ -3774,6 +3877,11 @@ function renderRepeatCustomers(data){
       <td style="font-size:11px;line-height:2">${history}</td>
     </tr>`;
   });
+  if(repeat2Total>50){
+    html2+=`<tr><td colspan="4" style="text-align:center;padding:10px;font-size:11px;color:var(--g400);background:var(--g50)">
+      ⚠️ 상위 50건만 표시됩니다 (전체 ${repeat2Total.toLocaleString()}건) · 전체 목록은 <b>엑셀 다운로드</b>로 확인하세요
+    </td></tr>`;
+  }
   document.getElementById('repeat2-tbody').innerHTML=html2||
     '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--g400)">재접수 2회 이상 고객 없음</td></tr>';
 }
@@ -4069,6 +4177,24 @@ function heatTextColor(v,max){
 }
 
 function downloadData(){
+  const start  = document.getElementById('f-start').value;
+  const end    = document.getElementById('f-end').value;
+  const war    = document.getElementById('f-warranty').value;
+  const pt     = document.getElementById('f-prodtype').value;
+  const search = (document.getElementById('search-input').value||'').trim();
+
+  // 필터 조건 요약 시트
+  const filterRows=[
+    {'항목':'다운로드 일시',    '값': new Date().toLocaleString('ko-KR')},
+    {'항목':'기간',             '값': (start||'전체시작')+'  ~  '+(end||'전체종료')},
+    {'항목':'유무상',           '값': war||'전체'},
+    {'항목':'제품유형(증상대)', '값': pt||'전체'},
+    {'항목':'검색어',           '값': search||'없음'},
+    {'항목':'총 건수',          '값': getDisplayData().length.toLocaleString()+'건'},
+  ];
+  const wsInfo = XLSX.utils.json_to_sheet(filterRows);
+  wsInfo['!cols'] = [{wch:20},{wch:40}];
+
   const ws=XLSX.utils.json_to_sheet(getDisplayData().map(r=>({
     구분:TYPE_NAMES[r.status]||r.status,
     접수번호:r.id, 접수일자:r.date,
@@ -4080,6 +4206,7 @@ function downloadData(){
     완료처리자:r.handler, 처리방법:r.act2
   })));
   const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,wsInfo,'필터조건');
   XLSX.utils.book_append_sheet(wb,ws,'CS_AS데이터');
   XLSX.writeFile(wb,`simmons_cs_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
@@ -4113,8 +4240,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
 // ══════════════════════════════════════
 // PASSWORD PROTECTION
 // ══════════════════════════════════════
-const DASHBOARD_PW = 'simmons2026'; // ← 비밀번호 변경 시 여기만 수정
+// 비밀번호 변경 방법: 아래 명령으로 새 해시를 구한 뒤 DASHBOARD_PW_HASH를 교체하세요.
+// (PowerShell) [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes("새비밀번호"))).Replace("-","").ToLower()
+// (Node.js)    require('crypto').createHash('sha256').update('새비밀번호').digest('hex')
+const DASHBOARD_PW_HASH = '57248fe0606a8b66ede8d24f3780c36faf4809f2329a7615061e0cbd944f5fc0';
 let _pwCallback = null;
+
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 function requirePassword(desc, callback){
   _pwCallback = callback;
@@ -4125,10 +4260,11 @@ function requirePassword(desc, callback){
   document.getElementById('pw-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('pw-input').focus(), 60);
 }
-function submitPw(){
+async function submitPw(){
   const val = document.getElementById('pw-input').value;
-  if(val === DASHBOARD_PW){
-    const cb = _pwCallback;  // closePwModal이 null로 초기화하기 전에 저장
+  const hash = await sha256hex(val);
+  if(hash === DASHBOARD_PW_HASH){
+    const cb = _pwCallback;
     closePwModal();
     if(cb) cb();
   } else {
